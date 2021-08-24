@@ -37,7 +37,7 @@ class Agent():
                  batch_size: int = 256,
                  delay: int = 1,
                  grad_clip: float = 1.0,
-                 device: str = 'cpu',
+                 device: str = 'gpu',
                  ) -> None:
         """Constructor method of the Agent class.
         

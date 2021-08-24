@@ -23,7 +23,7 @@ class Network(torch.nn.Module):
                  layer_neurons: int, 
                  network_name: str, 
                  checkpoint_directory_networks: str,
-                 device: str = 'cpu',
+                 device: str = 'gpu',
                  ) -> None:
         """Constructor method for the Network class.
         
@@ -89,9 +89,9 @@ class Critic(Network):
         super(Critic, self).__init__(*args, **kwargs)
         self.action_space_dimension = action_space_dimension
         
-        self.layer1 = torch.nn.Linear(self.input_shape[0] + action_space_dimension, self.layer_neurons)
-        self.layer2 = torch.nn.Linear(self.layer_neurons, self.layer_neurons)
-        self.Q = torch.nn.Linear(self.layer_neurons, 1)
+        self.layer1 = torch.nn.Linear(self.input_shape[0] + action_space_dimension, self.layer_neurons).to(device=self.device)
+        self.layer2 = torch.nn.Linear(self.layer_neurons, self.layer_neurons).to(device=self.device)
+        self.Q = torch.nn.Linear(self.layer_neurons, 1).to(device=self.device)
         
         self.optimizer = torch.optim.Adam(self.parameters(), lr=lr_Q)
             
@@ -109,7 +109,7 @@ class Critic(Network):
             value attributed to the (state, action) pair
         """
         
-        x = self.layer1(torch.cat([state, action], dim=1))
+        x = self.layer1(torch.cat([state, action], dim=1).to(device=self.device))
         x = torch.nn.functional.relu(x)
         x = self.layer2(x)
         x = torch.nn.functional.relu(x)
@@ -145,10 +145,10 @@ class Actor(Network):
         self.max_actions = max_actions
         self.noise = 1e-6
         
-        self.layer1 = torch.nn.Linear(*self.input_shape, self.layer_neurons)
-        self.layer2 = torch.nn.Linear(self.layer_neurons, self.layer_neurons)
-        self.mu = torch.nn.Linear(self.layer_neurons, self.action_space_dimension)
-        self.log_sigma = torch.nn.Linear(self.layer_neurons, self.action_space_dimension)
+        self.layer1 = torch.nn.Linear(*self.input_shape, self.layer_neurons).to(device=self.device)
+        self.layer2 = torch.nn.Linear(self.layer_neurons, self.layer_neurons).to(device=self.device)
+        self.mu = torch.nn.Linear(self.layer_neurons, self.action_space_dimension).to(device=self.device)
+        self.log_sigma = torch.nn.Linear(self.layer_neurons, self.action_space_dimension).to(device=self.device)
         
         self.log_sigma_min = log_sigma_min
         self.log_sigma_max = log_sigma_max
@@ -167,7 +167,7 @@ class Actor(Network):
             expectation and standard deviation of a Normal distribution
         """
         
-        x = self.layer1(state)
+        x = self.layer1(torch.tensor(state).to(device=self.device))
         x = torch.nn.functional.gelu(x)
         x = self.layer2(x)
         x = torch.nn.functional.gelu(x)
@@ -233,9 +233,9 @@ class Value(Network):
         """
         
         super(Value, self).__init__(*args, **kwargs)        
-        self.layer1 = torch.nn.Linear(*self.input_shape, self.layer_neurons)
-        self.layer2 = torch.nn.Linear(self.layer_neurons, self.layer_neurons)
-        self.V = torch.nn.Linear(self.layer_neurons, 1)
+        self.layer1 = torch.nn.Linear(*self.input_shape, self.layer_neurons).to(device=self.device)
+        self.layer2 = torch.nn.Linear(self.layer_neurons, self.layer_neurons).to(device=self.device)
+        self.V = torch.nn.Linear(self.layer_neurons, 1).to(device=self.device)
         
         self.optimizer = torch.optim.Adam(self.parameters(), lr=lr_Q)
         
@@ -287,15 +287,15 @@ class Distributional_Critic(Network):
         """
         
         super(Distributional_Critic, self).__init__(*args, **kwargs)
-        self.linear1 = torch.nn.Linear(self.input_shape[0] + action_space_dimension, self.layer_neurons)
-        self.linear2 = torch.nn.Linear(self.layer_neurons, self.layer_neurons)
-        self.linear3 = torch.nn.Linear(self.layer_neurons, self.layer_neurons)
-        self.linear_mu_1 = torch.nn.Linear(self.layer_neurons, self.layer_neurons)
-        self.linear_mu_2 = torch.nn.Linear(self.layer_neurons, self.layer_neurons)
-        self.linear_mu_3 = torch.nn.Linear(self.layer_neurons, 1)
-        self.linear_log_sigma_1 = torch.nn.Linear(self.layer_neurons, self.layer_neurons)
-        self.linear_log_sigma_2 = torch.nn.Linear(self.layer_neurons, self.layer_neurons)
-        self.linear_log_sigma_3 = torch.nn.Linear(self.layer_neurons, 1)
+        self.linear1 = torch.nn.Linear(self.input_shape[0] + action_space_dimension, self.layer_neurons).to(device=self.device)
+        self.linear2 = torch.nn.Linear(self.layer_neurons, self.layer_neurons).to(device=self.device)
+        self.linear3 = torch.nn.Linear(self.layer_neurons, self.layer_neurons).to(device=self.device)
+        self.linear_mu_1 = torch.nn.Linear(self.layer_neurons, self.layer_neurons).to(device=self.device)
+        self.linear_mu_2 = torch.nn.Linear(self.layer_neurons, self.layer_neurons).to(device=self.device)
+        self.linear_mu_3 = torch.nn.Linear(self.layer_neurons, 1).to(device=self.device)
+        self.linear_log_sigma_1 = torch.nn.Linear(self.layer_neurons, self.layer_neurons).to(device=self.device)
+        self.linear_log_sigma_2 = torch.nn.Linear(self.layer_neurons, self.layer_neurons).to(device=self.device)
+        self.linear_log_sigma_3 = torch.nn.Linear(self.layer_neurons, 1).to(device=self.device)
         
         self.log_sigma_min = log_sigma_min
         self.log_sigma_max = log_sigma_max
@@ -318,7 +318,7 @@ class Distributional_Critic(Network):
             normal critic-value distribution attributed to the (state, action) input pair
         """
         
-        x = self.linear1(torch.cat([state, action], dim=1))
+        x = self.linear1(torch.cat([state, action], dim=1).to(device=self.device))
         x = torch.nn.functional.gelu(x)
         x = self.linear2(x)
         x = torch.nn.functional.gelu(x)
@@ -360,7 +360,7 @@ class Distributional_Critic(Network):
             standard deviation of the critic-value random variable
         """
         
-        mu, sigma = self.forward(state, action)
+        mu, sigma = self.forward(state, torch.tensor(action).to(device=self.device))
                 
         normal = torch.distributions.Normal(mu, sigma)
         

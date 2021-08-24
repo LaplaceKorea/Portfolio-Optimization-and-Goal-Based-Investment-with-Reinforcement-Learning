@@ -13,14 +13,27 @@
 
 #========================================================
 
+
+SCRIPTPATH=`dirname "$(readlink -f "$0")"`
+echo "scriptpath = $SCRIPTPATH"
+
+# trick!
+cd $SCRIPTPATH 
+pwd
+ls
+
+export PATH=/env/portfolio2/bin:$SCRIPTPATH/env/portfolio2/bin:$PATH
+which python
+
 #srun --unbuffered 
 python src/main.py \
---mode test \
---n_episodes 200 \
+--mode train \
+--n_episodes 2 \
+--gpu_devices 0 \
 --assets_to_trade portfolios_and_tickers/tickers_S\&P500_dummy.txt \
 --initial_portfolio portfolios_and_tickers/initial_portfolio_subset.json \
 --plot \
 --use_corr_matrix \
---checkpoint_directory saved_outputs/2021.07.26.21.49.56 \
+#--checkpoint_directory saved_outputs/2021.07.26.21.49.56 \
 
 
