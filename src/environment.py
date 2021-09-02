@@ -15,6 +15,10 @@ import numpy as np
 import pandas as pd
 from typing import Tuple
 
+import os
+tracing = os.getenv("TRACING") == "YES"
+print("TRACING=", tracing, os.getenv("TRACING"))
+
 from src.utilities import append_corr_matrix, append_corr_matrix_eigenvalues
 class Environment(gym.Env):
     """Environment for stock trading.
@@ -131,6 +135,7 @@ class Environment(gym.Env):
          
         self.current_step += 1      
         initial_value_portfolio = self._get_portfolio_value()
+        print("current_step = ", self.current_step)
         self.stock_prices = self.stock_market_history.iloc[self.current_step] 
         
         self._trade(actions)
@@ -213,7 +218,11 @@ class Environment(gym.Env):
         money_inflow = n_stocks_to_sell * self.stock_prices[idx] * (1 - self.sell_cost)
         self.cash_in_bank += money_inflow
         self.number_of_shares[idx] -= n_stocks_to_sell
-            
+        if tracing:
+            if money_inflow > 0:
+                print(self.current_step, "sell", idx, action, money_inflow, -n_stocks_to_sell, self.cash_in_bank, self.stock_prices[idx])
+            self._get_portfolio_value()
+
     def _buy(self, 
              idx: int, 
              action: int = 1,
@@ -234,7 +243,11 @@ class Environment(gym.Env):
         n_stocks_to_buy = min(action, self.cash_in_bank // self.stock_prices[idx])
         money_outflow = n_stocks_to_buy * self.stock_prices[idx] * (1 + self.buy_cost)
         self.cash_in_bank -= money_outflow
-        self.number_of_shares[idx] += n_stocks_to_buy   
+        self.number_of_shares[idx] += n_stocks_to_buy 
+        if tracing:
+            if money_outflow > 0:
+                print(self.current_step, "buy", idx, action, money_outflow, n_stocks_to_buy, self.cash_in_bank, self.stock_prices[idx])
+            self._get_portfolio_value()          
         
     def _get_observation(self) -> np.array:
         """Observation in the format given by the state_space, and perceived by the agent.
@@ -258,4 +271,6 @@ class Environment(gym.Env):
         """
         
         portfolio_value = self.cash_in_bank + self.number_of_shares.dot(self.stock_prices[:self.stock_space_dimension])
+        if tracing:
+            print(self.current_step, "portfolio_value", portfolio_value)        
         return portfolio_value
