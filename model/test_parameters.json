@@ -1,6 +1,6 @@
 {
     "initial_cash": null,
-    "initial_portfolio": "ip.json",
+    "initial_portfolio": "rls_bpuj3nsyIP.json",
     "assets_to_trade": "portfolios_and_tickers/tickers_S&P500_dummy.txt",
     "buy_rule": "most_first",
     "buy_cost": 0.001,
